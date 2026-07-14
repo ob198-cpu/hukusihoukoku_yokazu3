@@ -1,9 +1,9 @@
 const SPREADSHEET_ID = '1RzDcasCT_eAyE0xSs9j9O2y06dLoT8rCcBCIE42qvSc';
 const SHEETS = {
   state: { name: 'State', headers: ['key', 'json', 'updatedAt'] },
-  posts: { name: 'Posts', headers: ['id', 'weekStart', 'weekEnd', 'date', 'business', 'account', 'sns', 'content', 'impressions', 'followers', 'operator', 'inputAt', 'updatedAt', 'note', 'json'] },
-  workMetrics: { name: 'WorkMetrics', headers: ['id', 'date', 'workName', 'impressions', 'operator', 'inputAt', 'updatedAt', 'json'] },
-  followers: { name: 'Followers', headers: ['id', 'date', 'business', 'followers', 'operator', 'inputAt', 'updatedAt', 'json'] },
+  posts: { name: 'Posts', headers: ['id', 'weekStart', 'weekEnd', 'date', 'postTime', 'business', 'account', 'sns', 'postType', 'content', 'impressions', 'likes', 'comments', 'shares', 'saves', 'profileAccesses', 'linkClicks', 'followers', 'operator', 'inputAt', 'updatedAt', 'note', 'json'] },
+  workMetrics: { name: 'WorkMetrics', headers: ['id', 'date', 'sns', 'workName', 'content', 'impressions', 'likes', 'comments', 'shares', 'saves', 'profileAccesses', 'linkClicks', 'operator', 'inputAt', 'updatedAt', 'json'] },
+  followers: { name: 'Followers', headers: ['id', 'date', 'business', 'sns', 'followers', 'operator', 'inputAt', 'updatedAt', 'json'] },
   inquiries: { name: 'Inquiries', headers: ['id', 'weekStart', 'weekEnd', 'date', 'business', 'sns', 'type', 'content', 'status', 'operator', 'inputAt', 'updatedAt', 'json'] },
   lsteps: { name: 'LSteps', headers: ['id', 'weekStart', 'weekEnd', 'checkDate', 'business', 'previous', 'current', 'limit', 'operator', 'inputAt', 'updatedAt', 'used', 'remaining', 'json'] },
   monitoring: { name: 'Monitoring', headers: ['id', 'userName', 'month', 'visited', 'recordDone', 'meetingRequired', 'meetingDone', 'reportDone', 'mailed', 'returned', 'officeSent', 'billingDone', 'billingSent', 'addOn', 'continueType', 'note', 'operator', 'inputAt', 'updatedAt', 'json'] },
@@ -118,7 +118,16 @@ function readJsonColumn_(def) {
   if (jsonIndex < 0) return [];
   return readRawRows_(def).map(function(row) {
     try {
-      return JSON.parse(row[jsonIndex] || '{}');
+      var raw = row[jsonIndex];
+      if (!raw) {
+        for (var i = row.length - 1; i >= 0; i--) {
+          if (typeof row[i] === 'string' && /^[\[{]/.test(row[i].trim())) {
+            raw = row[i];
+            break;
+          }
+        }
+      }
+      return JSON.parse(raw || '{}');
     } catch (e) {
       return null;
     }
@@ -171,15 +180,15 @@ function normalizeData_(data) {
 }
 
 function postRow_(item) {
-  return [item.id || '', item.weekStart || '', item.weekEnd || '', item.date || '', item.business || '', item.account || '', item.sns || '', item.content || '', number_(item.impressions), number_(item.followers), item.operator || '', item.inputAt || '', item.updatedAt || '', item.note || '', JSON.stringify(item)];
+  return [item.id || '', item.weekStart || '', item.weekEnd || '', item.date || '', item.postTime || '', item.business || '', item.account || '', item.sns || '', item.postType || '', item.content || '', number_(item.impressions), number_(item.likes), number_(item.comments), number_(item.shares), number_(item.saves), number_(item.profileAccesses), number_(item.linkClicks), number_(item.followers), item.operator || '', item.inputAt || '', item.updatedAt || '', item.note || '', JSON.stringify(item)];
 }
 
 function workMetricRow_(item) {
-  return [item.id || '', item.date || '', item.workName || '', number_(item.impressions), item.operator || '', item.inputAt || '', item.updatedAt || '', JSON.stringify(item)];
+  return [item.id || '', item.date || '', item.sns || '', item.workName || '', item.content || '', number_(item.impressions), number_(item.likes), number_(item.comments), number_(item.shares), number_(item.saves), number_(item.profileAccesses), number_(item.linkClicks), item.operator || '', item.inputAt || '', item.updatedAt || '', JSON.stringify(item)];
 }
 
 function followerRow_(item) {
-  return [item.id || '', item.date || '', item.business || '', number_(item.followers), item.operator || '', item.inputAt || '', item.updatedAt || '', JSON.stringify(item)];
+  return [item.id || '', item.date || '', item.business || '', item.sns || '', number_(item.followers), item.operator || '', item.inputAt || '', item.updatedAt || '', JSON.stringify(item)];
 }
 
 function inquiryRow_(item) {
